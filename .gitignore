@@ -221,3 +221,6 @@ __marimo__/
 
 data/
 .scannerwork/
+
+# Registros de evidencia del laboratorio
+!logs/*.log

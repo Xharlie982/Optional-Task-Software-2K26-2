@@ -26,7 +26,7 @@ Cambiar el descuento premium o el umbral de envio gratuito exige editar ambos me
 
 Extract Method: extraer el calculo a una unica funcion o metodo compartido por save y quote, conservando los importes, el truncamiento y la aplicacion del umbral sobre el subtotal anterior al descuento.
 
-Estado: identificado; pendiente de aplicar.
+Estado final: duplicacion del calculo eliminada mediante Extract Method y Extract Class.
 
 
 ## 2. Long Method: multiples responsabilidades en save
@@ -61,7 +61,7 @@ Extract Method: separar bloques con una responsabilidad clara, como calcular imp
 
 Esta tecnica tambien se propone para Duplicate Code; ambas aplicaciones cuentan como una sola tecnica distinta para la entrega.
 
-Estado: identificado; pendiente de aplicar.
+Estado final: mejora parcial; se extrajo el calculo comercial, pero save conserva validaciones, persistencia y construccion de respuesta.
 
 
 ## 3. Long Parameter List: parametros separados en save
@@ -88,7 +88,7 @@ Preserve Whole Object: recibir el objeto OrderInput completo y mantener order_id
 
 Las rutas enviarian el objeto validado que ya reciben. Se conservarian los cuerpos HTTP, las validaciones y las reglas de negocio. Esta decision mantiene el servicio acoplado al modelo de entrada existente; para el alcance del laboratorio evita introducir otro objeto con los mismos campos.
 
-Estado: identificado; pendiente de aplicar.
+Estado final: lista de parametros simplificada mediante Preserve Whole Object.
 
 
 ## 4. Large Class: responsabilidades concentradas en OrderService
@@ -120,4 +120,4 @@ Extract Class: trasladar las reglas de descuentos y envios a una clase PricingCa
 
 El alcance sera separar el calculo comercial; no se pretende eliminar todas las responsabilidades de OrderService ni introducir una arquitectura completa. Se conservaran las transacciones y los contratos HTTP.
 
-Estado: identificado; pendiente de aplicar.
+Estado final: mejora parcial mediante Extract Class; PricingCalculator concentra el calculo y OrderService conserva las demas responsabilidades.

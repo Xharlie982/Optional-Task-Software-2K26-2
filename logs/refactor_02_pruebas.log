@@ -1,0 +1,31 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.5, pytest-9.1.1, pluggy-1.7.0
+rootdir: C:\Trabajos\Optional-Task-Software-2K26-2
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.15.1, cov-7.1.0
+collected 25 items
+
+tests\test_customers.py ..                                               [  8%]
+tests\test_order_states.py ...                                           [ 20%]
+tests\test_orders.py ....                                                [ 36%]
+tests\test_pricing.py .......                                            [ 64%]
+tests\test_pricing_unit.py .........                                     [100%]
+
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.13.5-final-0 _______________
+
+Name               Stmts   Miss  Cover   Missing
+------------------------------------------------
+app\__init__.py        0      0   100%
+app\customers.py      49      6    88%   55, 57-58, 67-69
+app\database.py       23      0   100%
+app\orders.py        158     11    93%   55, 60, 66, 101, 106, 116, 132, 156, 166, 169, 214
+app\products.py       42     12    71%   29-30, 38, 50, 56-63
+main.py               26      2    92%   29, 38
+------------------------------------------------
+TOTAL                298     31    90%
+Coverage HTML written to dir htmlcov
+Coverage XML written to file coverage.xml
+Required test coverage of 80% reached. Total coverage: 89.60%
+============================= 25 passed in 1.97s ==============================

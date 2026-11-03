@@ -6,7 +6,7 @@ Codigo original: 969cbdb93b2fc34bce2f2236d4a405d6e1d1261f, etiqueta estado-inici
 
 Revision con las 25 pruebas previas: ba8875c55adafb8c4b4f6404d34f0c2757b2c736.
 
-Se aplicaron tres tecnicas distintas. La revision final se registrara al crear el commit de cierre.
+Se aplicaron tres tecnicas distintas. Revision del codigo refactorizado analizada en SonarQube: 1d8bdf27852f07ce293945d84e4bcac881221585.
 
 ## 1. Extract Method
 
@@ -18,18 +18,18 @@ Antes, bloque de save:
 
 ```python
 if customer["category"] == "premium":
-                discount = subtotal * 10 // 100
-            elif customer["category"] == "business":
-                discount = subtotal * 15 // 100
-            else:
-                discount = 0
-            if shipping == "pickup":
-                delivery = 0
-            elif shipping == "standard":
-                delivery = 0 if subtotal >= 10_000 else 1_000
-            else:
-                delivery = 2_500
-            total = subtotal - discount + delivery
+    discount = subtotal * 10 // 100
+elif customer["category"] == "business":
+    discount = subtotal * 15 // 100
+else:
+    discount = 0
+if shipping == "pickup":
+    delivery = 0
+elif shipping == "standard":
+    delivery = 0 if subtotal >= 10_000 else 1_000
+else:
+    delivery = 2_500
+total = subtotal - discount + delivery
 ```
 
 Primero se extrajo el bloque al metodo estatico OrderService._calculate_totals, utilizado desde save y quote. En la tercera tecnica ese metodo se traslado a PricingCalculator.calculate.
@@ -113,6 +113,50 @@ Las pruebas comprueban descuentos, truncamiento, umbral de envio gratuito, conse
 
 Long Method y Large Class se redujeron parcialmente: save y OrderService aun coordinan varias responsabilidades. No se afirma que todos los smells hayan desaparecido.
 
-Las pruebas actuales no cubren todos los errores y operaciones CRUD posibles. Falta adjuntar el analisis final de SonarQube y completar las evidencias de ejecucion de la API.
+Las pruebas actuales no cubren todos los errores y operaciones CRUD posibles. El analisis final de SonarQube y el recorrido de la API se completaron; los resultados y evidencias se detallan a continuacion.
 
 No se implementaron los adicionales de idempotencia, cola y DLQ, ni el analisis VHS.
+
+
+## Resultados de SonarQube
+
+Servidor: SonarQube Community Build 26.10.0.133078. Scanner: SonarScanner CLI 8.1.0.6389. Perfil de Python: Sonar way core, utilizado en ambos analisis.
+
+| Metrica global | Antes | Despues |
+| --- | --- | --- |
+| Revision del codigo | ba8875c | 1d8bdf2 |
+| Cobertura mostrada | 89.8 por ciento | 89.7 por ciento |
+| Lineas a cubrir | 303 | 300 |
+| Hallazgos abiertos de seguridad | 0 | 0 |
+| Hallazgos abiertos de fiabilidad | 0 | 0 |
+| Hallazgos abiertos de mantenibilidad | 0 | 0 |
+| Duplicacion detectada | 0.0 por ciento | 0.0 por ciento |
+
+Se consulto Overall Code. La cobertura exacta de pytest paso de 89.77 a 89.67 por ciento: una disminucion de 0.10 puntos porcentuales. Se mantienen 31 lineas sin cubrir; cambio el denominador al refactorizar.
+
+Los cero hallazgos y la duplicacion automatica de 0.0 por ciento no invalidan los cuatro smells documentados manualmente: las metricas automaticas dependen de las reglas y criterios del analizador. No se afirma una reduccion de hallazgos automaticos, pues ambos analisis reportan cero. La ejecucion exitosa del scanner no demuestra por si sola el estado del Quality Gate.
+
+Evidencias:
+
+- [SonarQube antes](../evidencias/sonarqube_antes_refactorizacion.png).
+- [SonarQube despues](../evidencias/sonarqube_despues_refactorizacion.png).
+- [Log antes](../logs/sonar_antes_refactorizacion.log).
+- [Log despues](../logs/sonar_despues_refactorizacion.log).
+
+## Recorrido de la API en funcionamiento
+
+Se ejecuto la API con LAB_DB_PATH=data/evidencia_api.sqlite3. Los identificadores devueltos para cliente, producto y pedido fueron 1.
+
+| Operacion | Resultado observado |
+| --- | --- |
+| Crear cliente premium | HTTP 201 |
+| Crear producto de 2500 centavos y stock 5 | HTTP 201 |
+| Cotizar dos unidades con envio standard | HTTP 200; subtotal 5000, descuento 500, envio 1000, total 5500 |
+| Crear pedido | HTTP 201; pending; total 5500 |
+| Confirmar | HTTP 200; confirmed |
+| Consultar producto | HTTP 200; stock 3 |
+| Consultar notificaciones | HTTP 200; una notificacion |
+| Repetir confirmacion | HTTP 409 |
+| Consultar efectos despues del conflicto | Stock 3 y una notificacion |
+
+Las respuestas se conservaron en logs/api_01_cliente.log hasta logs/api_09_verificacion_final.log. La [captura final](../evidencias/api_verificacion_final.png) muestra la consulta del registro de verificacion. Este recorrido prueba la proteccion contra confirmar dos veces; no implementa el adicional de idempotencia de creacion.

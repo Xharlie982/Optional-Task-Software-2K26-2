@@ -1,0 +1,7 @@
+HTTP/1.1 200 OK
+date: Tue, 03 Nov 2026 03:23:20 GMT
+server: uvicorn
+content-length: 84
+content-type: application/json
+
+{"id":1,"status":"confirmed","message":"Pedido 1 confirmado. Total: 5500 centavos."}
