@@ -38,6 +38,17 @@ Laboratorio de pruebas, analisis estatico y refactorizacion de una API de pedido
 
 Las dependencias exactas estan fijadas en `uv.lock`; el registro de instalacion es `../logs/instalacion.log`.
 
+## Cambios en archivos del enunciado
+
+Solo se modifico `pyproject.toml`, en el commit `e0d471e`. No se tocaron `README.md`, `LICENSE`, `compose.yaml`, `sonar-project.properties`, `uv.lock` ni `main.py`.
+
+| Clave de `pyproject.toml` | Antes | Ahora |
+| --- | --- | --- |
+| `[tool.coverage.run] source` | `["app", "main"]` | `["."]` |
+| `[tool.coverage.report] include` | no existia | `["app/*.py", "main.py"]` |
+
+El conjunto medido es el mismo: `app/*.py` y `main.py`. El log inicial (`pruebas_iniciales_cobertura_67.log`) y el final (`pruebas_finales_cobertura_99_67.log`) listan los mismos archivos, mas `app/pricing.py`, que nacio con Extract Class. Lo que cambia es que `coverage.xml` parte de la raiz del repositorio (`<source>.</source>` y rutas como `app/orders.py`), la misma base que usan las rutas de `sonar-project.properties` (`sonar.sources=app,main.py`). No se excluyo codigo de aplicacion ni se redujo la meta de 80 por ciento.
+
 ## Como reproducir
 
 Requisitos: Git, uv, Docker con Compose y SonarScanner CLI. Todos los comandos se ejecutan desde la raiz del repositorio.
