@@ -1,8 +1,10 @@
+import time
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from app.notifications import NotificationQueue
 from app.pricing import PricingCalculator
 
 
@@ -127,9 +129,8 @@ class OrderService:
                     raise HTTPException(409, f"Stock insuficiente para producto {item['product_id']}")
             customer = connection.execute("SELECT * FROM customers WHERE id = ?", (order["customer_id"],)).fetchone()
             message = f"Pedido {order_id} confirmado. Total: {order['total_cents']} centavos."
-            connection.execute(
-                "INSERT INTO notifications(order_id, recipient, message) VALUES (?, ?, ?)",
-                (order_id, customer["email"], message),
+            NotificationQueue.enqueue(
+                connection, order_id, customer["email"], message, f"pedido-confirmado-{order_id}", time.time(),
             )
             connection.execute("UPDATE orders SET status = 'confirmed' WHERE id = ?", (order_id,))
             return {"id": order_id, "status": "confirmed", "message": message}

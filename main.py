@@ -6,7 +6,7 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from app import customers, orders, products
+from app import customers, notifications, orders, products
 from app.database import Database
 
 
@@ -23,6 +23,7 @@ def create_app(database_path=None):
     application.include_router(products.router)
     application.include_router(customers.router)
     application.include_router(orders.router)
+    application.include_router(notifications.router)
 
     @application.exception_handler(sqlite3.OperationalError)
     async def database_error(request: Request, error: sqlite3.OperationalError):

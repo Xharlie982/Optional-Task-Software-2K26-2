@@ -66,4 +66,31 @@ class Database:
                     recipient TEXT NOT NULL,
                     message TEXT NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS notification_queue (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    dedupe_key TEXT NOT NULL,
+                    order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+                    recipient TEXT NOT NULL,
+                    message TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'processing')),
+                    attempts INTEGER NOT NULL DEFAULT 0,
+                    available_at REAL NOT NULL,
+                    locked_until REAL,
+                    last_error TEXT,
+                    created_at REAL NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS notification_dlq (
+                    id INTEGER PRIMARY KEY,
+                    dedupe_key TEXT NOT NULL,
+                    order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+                    recipient TEXT NOT NULL,
+                    message TEXT NOT NULL,
+                    attempts INTEGER NOT NULL,
+                    last_error TEXT NOT NULL,
+                    failed_at REAL NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS delivered_messages (
+                    dedupe_key TEXT PRIMARY KEY,
+                    notification_id INTEGER NOT NULL REFERENCES notifications(id) ON DELETE CASCADE
+                );
             """)
