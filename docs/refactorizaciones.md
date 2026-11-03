@@ -8,6 +8,8 @@ Revision con las 25 pruebas previas: ba8875c55adafb8c4b4f6404d34f0c2757b2c736.
 
 Se aplicaron tres tecnicas distintas. Revision del codigo refactorizado analizada en SonarQube: 1d8bdf27852f07ce293945d84e4bcac881221585.
 
+Ultima revision con cambios de codigo: 70d49bea34ab4ec613a418205d6a9794af3e5c7c (formato de app/orders.py y pruebas ampliadas; ver la seccion de ampliacion posterior). Resumen de revisiones, versiones y comandos: [informe.md](informe.md).
+
 ## 1. Extract Method
 
 Problema: save y quote repetian descuentos, envios y calculo del total.
@@ -109,11 +111,28 @@ PricingCalculator alcanzo 100 por ciento de cobertura. Las variaciones globales 
 
 Las pruebas comprueban descuentos, truncamiento, umbral de envio gratuito, conservacion de precios, recalculo al editar, estados finales, stock insuficiente con rollback y persistencia tras reiniciar, entre otros casos.
 
+## Ampliacion posterior de pruebas
+
+La comparacion de antes y despues se hizo con las mismas 25 pruebas, sin cambiar sus expectativas. Despues se amplio la suite a 133 pruebas (108 nuevas) en la revision 70d49be, para cubrir lo que el laboratorio pide y las 25 iniciales no ejercitaban:
+
+| Archivo | Que comprueba |
+| --- | --- |
+| tests/test_products.py | CRUD de productos, 404, validaciones y limites, 409 al eliminar un producto con pedidos y persistencia tras reiniciar |
+| tests/test_customers.py (ampliado) | 404, correo duplicado al actualizar, 409 al eliminar un cliente con pedidos, validaciones, categoria por defecto y persistencia |
+| tests/test_orders_api.py | 404 de cliente, producto y pedido; actualizacion fallida sin cambios; eliminar un pedido pendiente; stock verificado solo al confirmar; notificacion al confirmar; listado como resumen; validaciones de pedidos y cotizaciones |
+| tests/test_pricing_calculator.py | PricingCalculator sin mocks: truncamiento del descuento, umbral de envio gratis sobre el subtotal anterior al descuento y tarifas por tipo de envio |
+| tests/test_api_errors.py | 503 cuando SQLite no esta disponible e identificadores no numericos |
+| tests/conftest.py | Fixtures compartidas: client (base temporal por prueba) y make_payload |
+
+Resultado: 133 pruebas aprobadas y 99.67 por ciento de cobertura de lineas (registro: [pruebas_finales_cobertura_99_67.log](../logs/pruebas_finales_cobertura_99_67.log)). customers, database, orders, pricing y products quedan al 100 por ciento; main.py queda al 96 por ciento porque la linea 38 (uvicorn.run bajo if __name__ == "__main__") no se ejecuta en las pruebas. No se excluyo codigo de aplicacion ni se redujo la meta.
+
+El commit ff80d4c acomodo el formato de app/orders.py (orden de imports, una linea en blanco menos y llamadas a save en una sola linea) sin cambiar el comportamiento. Las pruebas nuevas no se ejecutaron contra las revisiones anteriores; la comparacion de antes y despues sigue apoyada en las 25 originales.
+
 ## Limites pendientes
 
 Long Method y Large Class se redujeron parcialmente: save y OrderService aun coordinan varias responsabilidades. No se afirma que todos los smells hayan desaparecido.
 
-Las pruebas actuales no cubren todos los errores y operaciones CRUD posibles. El analisis final de SonarQube y el recorrido de la API se completaron; los resultados y evidencias se detallan a continuacion.
+Tras la ampliacion posterior de pruebas se cubren el CRUD y los errores de las tres rutas; la unica linea sin cubrir es main.py:38, el arranque de uvicorn. El analisis de SonarQube y el recorrido de la API se completaron; los resultados y evidencias se detallan a continuacion.
 
 No se implementaron los adicionales de idempotencia, cola y DLQ, ni el analisis VHS.
 
@@ -142,6 +161,30 @@ Evidencias:
 - [SonarQube despues](../evidencias/sonarqube_despues_refactorizacion.png).
 - [Log antes](../logs/sonar_antes_refactorizacion.log).
 - [Log despues](../logs/sonar_despues_refactorizacion.log).
+
+### Analisis final con la suite ampliada
+
+Revision analizada: 70d49be, con el mismo servidor, scanner y perfil que los analisis anteriores.
+
+| Metrica global | Final |
+| --- | --- |
+| Revision del codigo | 70d49be |
+| Cobertura mostrada | 99.7 por ciento |
+| Lineas a cubrir | 300 |
+| Lineas de codigo | 384 |
+| Hallazgos abiertos de seguridad | 0 |
+| Hallazgos abiertos de fiabilidad | 0 |
+| Hallazgos abiertos de mantenibilidad | 0 |
+| Security Hotspots | 0 |
+| Duplicacion detectada | 0.0 por ciento (sobre 474 lineas) |
+
+La cobertura exacta de pytest es 99.67 por ciento; SonarQube la muestra redondeada. Las lineas a cubrir siguen siendo 300 porque las pruebas nuevas no cambian el codigo de aplicacion, y solo main.py:38 queda sin cubrir. El analisis reporta cero hallazgos abiertos tambien con la suite ampliada. Se mantiene la advertencia anterior: cero hallazgos automaticos no demuestran ausencia de smells.
+
+Evidencias:
+
+- [SonarQube final](../evidencias/sonarqube_final_cobertura_99_7.png).
+- [Log final](../logs/sonar_final_cobertura_99_7.log).
+- [Pruebas finales](../logs/pruebas_finales_cobertura_99_67.log).
 
 ## Recorrido de la API en funcionamiento
 

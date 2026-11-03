@@ -1,0 +1,107 @@
+23:34:37.679 INFO  Scanner configuration file: C:\Users\aster\Downloads\Winrar_Carpetas\sonar-scanner-cli-8.1.0.6389-windows-x64\sonar-scanner-8.1.0.6389-windows-x64\bin\..\conf\sonar-scanner.properties
+23:34:37.681 INFO  Project root configuration file: C:\Trabajos\Optional-Task-Software-2K26-2\sonar-project.properties
+23:34:37.693 INFO  SonarScanner CLI 8.1.0.6389
+23:34:37.700 INFO  Windows 11 10.0 amd64
+23:34:40.109 INFO  Communicating with SonarQube Community Build 26.10.0.133078
+23:34:40.110 INFO  JRE provisioning: os[windows], arch[amd64]
+23:34:40.549 INFO  Starting SonarScanner Engine...
+23:34:40.550 INFO  Java 21.0.12.1 Eclipse Adoptium (64-bit)
+23:34:43.197 INFO  Load global settings
+23:34:43.370 INFO  Load global settings (done) | time=171ms
+23:34:43.374 INFO  Server id: 147B411E-AaGfA5aGU4d2JVp7P3fj
+23:34:43.382 INFO  Loading required plugins
+23:34:43.382 INFO  Load plugins index
+23:34:43.411 INFO  Load plugins index (done) | time=27ms
+23:34:43.411 INFO  Load/download plugins
+23:34:43.427 INFO  Load/download plugins (done) | time=17ms
+23:34:43.738 INFO  Load project settings for component key: 'tienda-lab'
+23:34:43.772 INFO  Load project settings for component key: 'tienda-lab' (done) | time=35ms
+23:34:43.784 INFO  Process project properties
+23:34:43.801 INFO  Process project properties (done) | time=18ms
+23:34:43.815 INFO  Project key: tienda-lab
+23:34:43.815 INFO  Base dir: C:\Trabajos\Optional-Task-Software-2K26-2
+23:34:43.816 INFO  Working dir: C:\Trabajos\Optional-Task-Software-2K26-2\.scannerwork
+23:34:43.988 INFO  Load quality profiles
+23:34:44.183 INFO  Load quality profiles (done) | time=195ms
+23:34:44.208 INFO  Load active rules
+23:34:44.526 INFO  Load active rules (done) | time=317ms
+23:34:44.531 INFO  Load analysis cache
+23:34:44.556 INFO  Load analysis cache | time=25ms
+23:34:44.636 INFO  Preprocessing files...
+23:34:44.717 INFO  1 language detected in 17 preprocessed files (done) | time=81ms
+23:34:44.717 INFO  16 files ignored because of scm ignore settings
+23:34:44.719 INFO  Loading plugins for detected languages
+23:34:44.720 INFO  Load/download plugins
+23:34:44.730 INFO  Load/download plugins (done) | time=10ms
+23:34:44.848 INFO  Load project repositories
+23:34:44.960 INFO  Load project repositories (done) | time=111ms
+23:34:44.981 INFO  Indexing files...
+23:34:44.981 INFO  Project configuration:
+23:34:44.990 INFO  17 files indexed (done) | time=8ms
+23:34:44.991 INFO  Quality profile for py: Sonar way core
+23:34:44.992 INFO  ------------- Run sensors on module Tienda Lab
+23:34:45.031 INFO  Load metrics repository
+23:34:45.063 INFO  Load metrics repository (done) | time=31ms
+23:34:45.525 INFO  Sensor IaC YAML File Type Classification Sensor [iac]
+23:34:45.528 INFO  Sensor IaC YAML File Type Classification Sensor [iac] (done) | time=2ms
+23:34:45.528 INFO  Sensor IaC hadolint report Sensor [iac]
+23:34:45.529 INFO  Sensor IaC hadolint report Sensor [iac] (done) | time=0ms
+23:34:45.529 INFO  Sensor Java Config Sensor [iac]
+23:34:45.529 INFO  There are no files to be analyzed for the Java language
+23:34:45.529 INFO  Sensor Java Config Sensor [iac] (done) | time=1ms
+23:34:45.529 INFO  Sensor IaC Docker Sensor [iac]
+23:34:45.532 INFO  There are no files to be analyzed for the Docker language
+23:34:45.533 INFO  Sensor IaC Docker Sensor [iac] (done) | time=2ms
+23:34:45.533 INFO  Sensor Python Sensor [python]
+23:34:46.533 INFO  Starting global symbols computation
+23:34:46.536 INFO  17 source files to be analyzed
+23:34:47.213 INFO  17/17 source files have been analyzed
+23:34:47.214 INFO  Finished step global symbols computation in 680ms
+23:34:47.261 INFO  Starting rules execution
+23:34:47.262 INFO  17 source files to be analyzed
+23:34:47.972 INFO  17/17 source files have been analyzed
+23:34:47.972 INFO  Finished step rules execution in 711ms
+23:34:47.973 INFO  The Python analyzer was able to leverage cached data from previous analyses for 0 out of 17 files. These files were not parsed.
+23:34:47.976 INFO  Sensor Python Sensor [python] (done) | time=2443ms
+23:34:47.976 INFO  Sensor Cobertura Sensor for Python coverage [python]
+23:34:48.279 INFO  Python test coverage
+23:34:48.282 INFO  Parsing report 'C:\Trabajos\Optional-Task-Software-2K26-2\coverage.xml'
+23:34:48.367 INFO  Sensor Cobertura Sensor for Python coverage [python] (done) | time=391ms
+23:34:48.367 INFO  Sensor PythonXUnitSensor [python]
+23:34:48.606 INFO  Sensor PythonXUnitSensor [python] (done) | time=237ms
+23:34:48.606 INFO  Sensor Python Dependency Sensor [python]
+23:34:48.609 INFO  Sensor Python Dependency Sensor [python] (done) | time=3ms
+23:34:48.610 INFO  Sensor TextAndSecretsSensor [text]
+23:34:48.631 INFO  Available processors: 16
+23:34:48.631 INFO  Using 16 threads for analysis.
+23:34:48.907 INFO  Start fetching files for the text and secrets analysis
+23:34:49.049 INFO  Using Git CLI to retrieve dirty files
+23:34:49.103 INFO  Retrieving language associated files and files included via "sonar.text.inclusions" that are tracked by git
+23:34:49.103 INFO  Starting the text and secrets analysis
+23:34:49.105 INFO  17 source files to be analyzed for the text and secrets analysis
+23:34:49.135 INFO  17/17 source files have been analyzed for the text and secrets analysis
+23:34:49.137 INFO  Sensor TextAndSecretsSensor [text] (done) | time=528ms
+23:34:49.139 INFO  ------------- Run sensors on project
+23:34:49.306 INFO  Sensor IaC Project Sensor [iac]
+23:34:49.307 INFO  Sensor IaC Project Sensor [iac] (done) | time=0ms
+23:34:49.307 INFO  Sensor Zero Coverage Sensor
+23:34:49.308 INFO  Sensor Zero Coverage Sensor (done) | time=1ms
+23:34:49.308 INFO  ------------- Gather SCA dependencies on project
+23:34:49.315 INFO  Dependency analysis skipped
+23:34:49.325 INFO  SCM Publisher SCM provider for this project is: git
+23:34:49.325 INFO  SCM Publisher 7 source files to be analyzed
+23:34:49.810 INFO  SCM Publisher 7/7 source files have been analyzed (done) | time=484ms
+23:34:49.815 INFO  CPD Executor 1 file had no CPD blocks
+23:34:49.815 INFO  CPD Executor Calculating CPD for 6 files
+23:34:49.825 INFO  CPD Executor CPD calculation finished (done) | time=8ms
+23:34:49.832 INFO  SCM revision ID '70d49bea34ab4ec613a418205d6a9794af3e5c7c'
+23:34:49.943 INFO  Analysis report generated in 102ms, dir size=275.6 kB
+23:34:50.023 INFO  Analysis report compressed in 80ms, zip size=91.0 kB
+23:34:50.113 INFO  Analysis report uploaded in 90ms
+23:34:50.120 INFO  ANALYSIS SUCCESSFUL, you can find the results at: http://localhost:9000/dashboard?id=tienda-lab
+23:34:50.121 INFO  Note that you will be able to access the updated dashboard once the server has processed the submitted analysis report
+23:34:50.121 INFO  More about the report processing at http://localhost:9000/api/ce/task?id=2924054f-bc99-4815-be3c-40c876565530
+23:34:50.337 INFO  Analysis total time: 9.752 s
+23:34:50.413 INFO  SonarScanner Engine completed successfully
+23:34:50.495 INFO  EXECUTION SUCCESS
+23:34:50.496 INFO  Total time: 12.820s
