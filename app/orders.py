@@ -1,9 +1,14 @@
-from typing import Literal
+import hashlib
+import json
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, Header, HTTPException, Request, Response
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.pricing import PricingCalculator
+
+# Claves de idempotencia: de 1 a 255 caracteres ASCII visibles, sin espacios.
+IDEMPOTENCY_KEY_PATTERN = r"^[\x21-\x7E]{1,255}$"
 
 
 class ItemInput(BaseModel):
@@ -34,50 +39,80 @@ class OrderService:
 
     def save(self, data: OrderInput, order_id=None):
         with self.database.connect() as connection:
-            if order_id is not None:
-                old = connection.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
-                if old is None:
-                    raise HTTPException(404, "Pedido no encontrado")
-                if old["status"] != "pending":
-                    raise HTTPException(409, "Solo puede editar pedidos pendientes")
-            customer = connection.execute("SELECT * FROM customers WHERE id = ?", (data.customer_id,)).fetchone()
-            if customer is None:
-                raise HTTPException(404, "Cliente no encontrado")
-            subtotal = 0
-            lines = []
-            for item in data.items:
-                product = connection.execute("SELECT * FROM products WHERE id = ?", (item.product_id,)).fetchone()
-                if product is None:
-                    raise HTTPException(404, f"Producto {item.product_id} no encontrado")
-                subtotal += product["price_cents"] * item.quantity
-                lines.append((item.product_id, item.quantity, product["price_cents"]))
-            discount, delivery, total = PricingCalculator.calculate(customer["category"], subtotal, data.shipping)
-            values = (data.customer_id, customer["category"], data.address, data.city, data.postal_code, data.shipping,
-                      subtotal, discount, delivery, total)
-            if order_id is None:
-                cursor = connection.execute(
-                    """INSERT INTO orders(customer_id, customer_category, address, city, postal_code,
-                       shipping, subtotal_cents, discount_cents, shipping_cents, total_cents)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", values,
-                )
-                order_id = cursor.lastrowid
-            else:
-                connection.execute(
-                    """UPDATE orders SET customer_id = ?, customer_category = ?, address = ?, city = ?,
-                       postal_code = ?, shipping = ?, subtotal_cents = ?, discount_cents = ?,
-                       shipping_cents = ?, total_cents = ? WHERE id = ?""", (*values, order_id),
-                )
-                connection.execute("DELETE FROM order_items WHERE order_id = ?", (order_id,))
-            connection.executemany(
-                "INSERT INTO order_items(order_id, product_id, quantity, unit_price_cents) VALUES (?, ?, ?, ?)",
-                [(order_id, *line) for line in lines],
+            return self._write_order(connection, data, order_id)
+
+    def create(self, data: OrderInput, idempotency_key=None):
+        # Devuelve (resultado, repetido). Sin clave se comporta como save.
+        if idempotency_key is None:
+            return self.save(data), False
+        fingerprint = self._fingerprint(data)
+        with self.database.connect() as connection:
+            stored = connection.execute(
+                "SELECT request_hash, response FROM idempotency_keys WHERE idempotency_key = ?",
+                (idempotency_key,),
+            ).fetchone()
+            if stored is not None:
+                if stored["request_hash"] != fingerprint:
+                    raise HTTPException(409, "La clave de idempotencia ya se uso con un contenido distinto")
+                return json.loads(stored["response"]), True
+            result = self._write_order(connection, data)
+            connection.execute(
+                "INSERT INTO idempotency_keys(idempotency_key, request_hash, order_id, response) VALUES (?, ?, ?, ?)",
+                (idempotency_key, fingerprint, result["id"], json.dumps(result)),
             )
-            result = dict(connection.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone())
-            result["items"] = [dict(row) for row in connection.execute(
-                "SELECT product_id, quantity, unit_price_cents FROM order_items WHERE order_id = ? ORDER BY id",
-                (order_id,),
-            )]
-            return result
+            return result, False
+
+    @staticmethod
+    def _fingerprint(data: OrderInput):
+        canonical = json.dumps(data.model_dump(), sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+    @staticmethod
+    def _write_order(connection, data: OrderInput, order_id=None):
+        if order_id is not None:
+            old = connection.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
+            if old is None:
+                raise HTTPException(404, "Pedido no encontrado")
+            if old["status"] != "pending":
+                raise HTTPException(409, "Solo puede editar pedidos pendientes")
+        customer = connection.execute("SELECT * FROM customers WHERE id = ?", (data.customer_id,)).fetchone()
+        if customer is None:
+            raise HTTPException(404, "Cliente no encontrado")
+        subtotal = 0
+        lines = []
+        for item in data.items:
+            product = connection.execute("SELECT * FROM products WHERE id = ?", (item.product_id,)).fetchone()
+            if product is None:
+                raise HTTPException(404, f"Producto {item.product_id} no encontrado")
+            subtotal += product["price_cents"] * item.quantity
+            lines.append((item.product_id, item.quantity, product["price_cents"]))
+        discount, delivery, total = PricingCalculator.calculate(customer["category"], subtotal, data.shipping)
+        values = (data.customer_id, customer["category"], data.address, data.city, data.postal_code, data.shipping,
+                  subtotal, discount, delivery, total)
+        if order_id is None:
+            cursor = connection.execute(
+                """INSERT INTO orders(customer_id, customer_category, address, city, postal_code,
+                   shipping, subtotal_cents, discount_cents, shipping_cents, total_cents)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", values,
+            )
+            order_id = cursor.lastrowid
+        else:
+            connection.execute(
+                """UPDATE orders SET customer_id = ?, customer_category = ?, address = ?, city = ?,
+                   postal_code = ?, shipping = ?, subtotal_cents = ?, discount_cents = ?,
+                   shipping_cents = ?, total_cents = ? WHERE id = ?""", (*values, order_id),
+            )
+            connection.execute("DELETE FROM order_items WHERE order_id = ?", (order_id,))
+        connection.executemany(
+            "INSERT INTO order_items(order_id, product_id, quantity, unit_price_cents) VALUES (?, ?, ?, ?)",
+            [(order_id, *line) for line in lines],
+        )
+        result = dict(connection.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone())
+        result["items"] = [dict(row) for row in connection.execute(
+            "SELECT product_id, quantity, unit_price_cents FROM order_items WHERE order_id = ? ORDER BY id",
+            (order_id,),
+        )]
+        return result
 
     def quote(self, data):
         with self.database.connect() as connection:
@@ -170,8 +205,16 @@ def quote_order(data: OrderInput, request: Request):
 
 
 @router.post("", status_code=201)
-def create_order(data: OrderInput, request: Request):
-    return OrderService(request.app.state.database).save(data)
+def create_order(
+    data: OrderInput,
+    request: Request,
+    response: Response,
+    idempotency_key: Annotated[str | None, Header(pattern=IDEMPOTENCY_KEY_PATTERN)] = None,
+):
+    result, replayed = OrderService(request.app.state.database).create(data, idempotency_key)
+    if replayed:
+        response.headers["Idempotent-Replayed"] = "true"
+    return result
 
 
 @router.get("")
