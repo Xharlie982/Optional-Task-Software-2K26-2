@@ -18,8 +18,9 @@ testpaths = ["tests"]
 pythonpath = ["."]
 
 [tool.coverage.run]
-source = ["app", "main"]
+source = ["."]
 relative_files = true
 
 [tool.coverage.report]
+include = ["app/*.py", "main.py"]
 show_missing = true
