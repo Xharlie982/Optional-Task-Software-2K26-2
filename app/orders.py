@@ -1,5 +1,7 @@
 from typing import Literal
 
+from app.pricing import PricingCalculator
+
 from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -30,7 +32,8 @@ class OrderService:
     def __init__(self, database):
         self.database = database
 
-    def save(self, customer_id, address, city, postal_code, shipping, items, order_id=None):
+
+    def save(self, data: OrderInput, order_id=None):
         with self.database.connect() as connection:
             if order_id is not None:
                 old = connection.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
@@ -38,31 +41,19 @@ class OrderService:
                     raise HTTPException(404, "Pedido no encontrado")
                 if old["status"] != "pending":
                     raise HTTPException(409, "Solo puede editar pedidos pendientes")
-            customer = connection.execute("SELECT * FROM customers WHERE id = ?", (customer_id,)).fetchone()
+            customer = connection.execute("SELECT * FROM customers WHERE id = ?", (data.customer_id,)).fetchone()
             if customer is None:
                 raise HTTPException(404, "Cliente no encontrado")
             subtotal = 0
             lines = []
-            for item in items:
+            for item in data.items:
                 product = connection.execute("SELECT * FROM products WHERE id = ?", (item.product_id,)).fetchone()
                 if product is None:
                     raise HTTPException(404, f"Producto {item.product_id} no encontrado")
                 subtotal += product["price_cents"] * item.quantity
                 lines.append((item.product_id, item.quantity, product["price_cents"]))
-            if customer["category"] == "premium":
-                discount = subtotal * 10 // 100
-            elif customer["category"] == "business":
-                discount = subtotal * 15 // 100
-            else:
-                discount = 0
-            if shipping == "pickup":
-                delivery = 0
-            elif shipping == "standard":
-                delivery = 0 if subtotal >= 10_000 else 1_000
-            else:
-                delivery = 2_500
-            total = subtotal - discount + delivery
-            values = (customer_id, customer["category"], address, city, postal_code, shipping,
+            discount, delivery, total = PricingCalculator.calculate(customer["category"], subtotal, data.shipping)
+            values = (data.customer_id, customer["category"], data.address, data.city, data.postal_code, data.shipping,
                       subtotal, discount, delivery, total)
             if order_id is None:
                 cursor = connection.execute(
@@ -100,20 +91,9 @@ class OrderService:
                 if product is None:
                     raise HTTPException(404, f"Producto {item.product_id} no encontrado")
                 subtotal += product["price_cents"] * item.quantity
-            if customer["category"] == "premium":
-                discount = subtotal * 10 // 100
-            elif customer["category"] == "business":
-                discount = subtotal * 15 // 100
-            else:
-                discount = 0
-            if data.shipping == "pickup":
-                delivery = 0
-            elif data.shipping == "standard":
-                delivery = 0 if subtotal >= 10_000 else 1_000
-            else:
-                delivery = 2_500
-            return {"subtotal_cents": subtotal, "discount_cents": discount,
-                    "shipping_cents": delivery, "total_cents": subtotal - discount + delivery}
+            discount, delivery, total = PricingCalculator.calculate(customer["category"], subtotal, data.shipping)
+            return dict(subtotal_cents=subtotal, discount_cents=discount,
+                        shipping_cents=delivery, total_cents=total)
 
     def get(self, order_id):
         with self.database.connect() as connection:
@@ -193,7 +173,7 @@ def quote_order(data: OrderInput, request: Request):
 @router.post("", status_code=201)
 def create_order(data: OrderInput, request: Request):
     return OrderService(request.app.state.database).save(
-        data.customer_id, data.address, data.city, data.postal_code, data.shipping, data.items,
+        data,
     )
 
 
@@ -210,7 +190,7 @@ def get_order(order_id: int, request: Request):
 @router.put("/{order_id}")
 def update_order(order_id: int, data: OrderInput, request: Request):
     return OrderService(request.app.state.database).save(
-        data.customer_id, data.address, data.city, data.postal_code, data.shipping, data.items, order_id,
+        data, order_id,
     )
 
 

@@ -1,0 +1,68 @@
+classDiagram
+    direction TB
+
+    class BaseModel {
+        <<external>>
+    }
+
+    class CustomerInput {
+        +str name
+        +EmailStr email
+        +Literal category
+    }
+
+    class ProductInput {
+        +str name
+        +int price_cents
+        +int stock
+    }
+
+    class ItemInput {
+        +int product_id
+        +int quantity
+    }
+
+    class OrderInput {
+        +int customer_id
+        +str address
+        +str city
+        +str postal_code
+        +Literal shipping
+        +list~ItemInput~ items
+        +unique_products() OrderInput
+    }
+
+    class Database {
+        +str path
+        +__init__(path)
+        +connect() contextmanager
+        +initialize()
+    }
+
+    class OrderService {
+        +Database database
+        +__init__(database)
+        +save(data, order_id) dict
+        +quote(data) dict
+        +get(order_id) dict
+        +list() list
+        +confirm(order_id) dict
+        +cancel(order_id) dict
+        +delete(order_id)
+        +notifications(order_id) list
+    }
+
+    BaseModel <|-- CustomerInput
+    BaseModel <|-- ProductInput
+    BaseModel <|-- ItemInput
+    BaseModel <|-- OrderInput
+    OrderInput "1" *-- "1..100" ItemInput : items
+    OrderService --> Database : database
+    OrderService ..> OrderInput : quote
+    OrderService ..> OrderInput : save
+
+    class PricingCalculator {
+        +calculate(category, subtotal, shipping)$ tuple
+    }
+
+    OrderService ..> PricingCalculator : calcula importes
