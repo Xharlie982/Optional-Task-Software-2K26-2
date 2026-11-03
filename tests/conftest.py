@@ -1,6 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from app.notifications import SimulatedChannel
+from app.worker import NotificationWorker
 from main import create_app
 
 
@@ -28,3 +30,12 @@ def make_payload(client):
         }
 
     return build
+
+
+@pytest.fixture
+def deliver_notifications(client):
+    # Ejecuta el worker sobre lo pendiente, como lo haria el proceso aparte.
+    def run():
+        return NotificationWorker(client.app.state.database, SimulatedChannel()).run_pending()
+
+    return run

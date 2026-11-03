@@ -20,7 +20,7 @@ def prepare(client, stock=5):
             "items": [{"product_id": product.json()["id"], "quantity": 2}]}
 
 
-def test_confirmation_keeps_price_and_deducts_stock_once(client):
+def test_confirmation_keeps_price_and_deducts_stock_once(client, deliver_notifications):
     payload = prepare(client)
     created = client.post("/orders", json=payload)
     assert created.status_code == 201
@@ -32,6 +32,8 @@ def test_confirmation_keeps_price_and_deducts_stock_once(client):
     assert client.post(f"/orders/{order['id']}/confirm").status_code == 409
     assert client.get(f"/products/{product_id}").json()["stock"] == 3
     assert client.get(f"/orders/{order['id']}").json()["total_cents"] == 5500
+    assert client.get(f"/orders/{order['id']}/notifications").json() == []
+    assert deliver_notifications() == ["delivered"]
     assert len(client.get(f"/orders/{order['id']}/notifications").json()) == 1
 
 

@@ -89,13 +89,15 @@ def test_confirmation_can_use_all_the_stock(client, make_payload):
     assert client.get(product_url(payload)).json()['stock'] == 0
 
 
-def test_confirmation_registers_the_notification_for_the_customer(client, make_payload):
+def test_confirmation_registers_the_notification_for_the_customer(client, make_payload, deliver_notifications):
     payload = make_payload()
     order = client.post('/orders', json=payload).json()
     url = '/orders/' + str(order['id'])
     message = 'Pedido ' + str(order['id']) + ' confirmado. Total: 5500 centavos.'
     confirmation = client.post(url + '/confirm')
     assert confirmation.json() == {'id': order['id'], 'status': 'confirmed', 'message': message}
+    assert client.get(url + '/notifications').json() == []
+    assert deliver_notifications() == ['delivered']
     notifications = client.get(url + '/notifications').json()
     assert [(row['order_id'], row['recipient'], row['message']) for row in notifications] == [
         (order['id'], 'ana@example.com', message),

@@ -13,7 +13,7 @@ def client(tmp_path):
     ('confirm', 'confirmed', 3, 1),
     ('cancel', 'cancelled', 5, 0),
 ])
-def test_final_orders_reject_changes(client, action, state, stock, notifications):
+def test_final_orders_reject_changes(client, deliver_notifications, action, state, stock, notifications):
     customer = client.post('/customers', json={'name': 'Ana', 'email': 'ana@example.com', 'category': 'premium'})
     assert customer.status_code == 201
     product = client.post('/products', json={'name': 'Libro', 'price_cents': 2500, 'stock': 5})
@@ -27,6 +27,7 @@ def test_final_orders_reject_changes(client, action, state, stock, notifications
     assert transition.status_code == 200
     snapshot = client.get(url).json()
     assert snapshot['status'] == state
+    deliver_notifications()
     initial_notifications = client.get(url + '/notifications').json()
     assert len(initial_notifications) == notifications
     assert client.put(url, json=dict(payload, address='Otra direccion')).status_code == 409
