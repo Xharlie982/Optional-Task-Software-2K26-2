@@ -10,6 +10,7 @@ Laboratorio de pruebas, analisis estatico y refactorizacion de una API de pedido
 | Tres tecnicas de refactorizacion, validacion y resultados de SonarQube | [refactorizaciones.md](refactorizaciones.md) |
 | Diagramas de clases inicial y final | [diagramas/](diagramas/): cada uno con fuente `.mmd` (Mermaid) y vista `.png` |
 | Capturas y registros | [../evidencias/](../evidencias/) y [../logs/](../logs/) |
+| Adicionales (ramas separadas) | Seccion "Adicionales" de este documento |
 
 ## Revisiones
 
@@ -20,7 +21,8 @@ Laboratorio de pruebas, analisis estatico y refactorizacion de una API de pedido
 | Antes de refactorizar | `ba8875c` | 25 pruebas, 89.77 por ciento; cuatro smells documentados |
 | Refactorizada | `1d8bdf2` | Extract Method, Preserve Whole Object y Extract Class; 25 pruebas, 89.67 por ciento |
 | Ultima con cambios de codigo | `70d49be` | Formato de `app/orders.py` (`ff80d4c`) y 133 pruebas, 99.67 por ciento; analizada de nuevo en SonarQube |
-| Entrega | etiqueta `estado-final` | Incluye este informe y todas las evidencias |
+| Entrega base | etiqueta `estado-final` | Informe y evidencias de la entrega base; punto de partida de las ramas de los adicionales |
+| Entrega completa | punta de `main` | Agrega a este informe los enlaces a las ramas de los adicionales |
 
 ## Versiones utilizadas
 
@@ -110,6 +112,18 @@ Sustituye `ba8875c` por `1d8bdf2` (refactorizada) o por `estado-inicial` (origin
 | `logs/sonar_*.log` | Salida del scanner de cada analisis, con la revision de git registrada |
 | `logs/refactor_01_pruebas.log` a `logs/refactor_03_pruebas.log` | Las mismas 25 pruebas tras cada tecnica de refactorizacion |
 
+## Adicionales
+
+Cada adicional vive en su propia rama del fork, creada a partir de la etiqueta `estado-final`, y no se fusiona con `main`: el enunciado los declara independientes y fuera de la implementacion base. Ademas, el adicional 2 cambia el contrato de las notificaciones (la notificacion aparece cuando corre el worker), por lo que habria alterado las evidencias de la entrega base.
+
+| Adicional | Rama (ultimo commit) | Documento | Resultado |
+| --- | --- | --- | --- |
+| 1. Idempotencia en `POST /orders` | `adicional-1-idempotencia` (`3b59747`) | [adicional_1_idempotencia.md](https://github.com/Xharlie982/Optional-Task-Software-2K26-2/blob/adicional-1-idempotencia/docs/adicional_1_idempotencia.md) | 152 pruebas aprobadas y 99.69 por ciento; registro `logs/adicional_1_pruebas.log` en la rama |
+| 2. Cola de notificaciones, worker y DLQ | `adicional-2-cola-dlq` (`630b163`) | [adicional_2_cola_dlq.md](https://github.com/Xharlie982/Optional-Task-Software-2K26-2/blob/adicional-2-cola-dlq/docs/adicional_2_cola_dlq.md) | 160 pruebas aprobadas y 99.57 por ciento; registro `logs/adicional_2_pruebas.log` en la rama; ajusta tres pruebas base por el nuevo contrato |
+| 3. Analisis de arquitectura VHS | `adicional-3-vhs` (`f00c7dd`) | [adicional_3_vhs.md](https://github.com/Xharlie982/Optional-Task-Software-2K26-2/blob/adicional-3-vhs/docs/adicional_3_vhs.md) | Solo documentacion; conclusion: adopcion parcial y escalonada |
+
+Para revisar uno: `git fetch origin`, `git switch adicional-1-idempotencia` (o la rama que corresponda) y `uv run pytest --cov --cov-report=term-missing --cov-fail-under=80`. Las pruebas de cada rama incluyen las 133 de la base mas las propias del adicional; el adicional 3 no cambia el codigo.
+
 ## Limitaciones pendientes
 
 - Cobertura: la linea 38 de `main.py` (`uvicorn.run` bajo `if __name__ == "__main__"`) no se ejecuta en las pruebas. No se excluyo del analisis.
@@ -118,3 +132,4 @@ Sustituye `ba8875c` por `1d8bdf2` (refactorizada) o por `estado-inicial` (origin
 - Las 108 pruebas nuevas no formaron parte de la comparacion antes y despues, que se hizo con las mismas 25 pruebas sin cambiar sus expectativas.
 - No hay pruebas de concurrencia ni de carga. Cada operacion abre su propia conexion SQLite y las escrituras se serializan con `BEGIN IMMEDIATE`.
 - SonarQube se ejecuto con su base de datos embebida, que el propio servidor advierte como pensada solo para evaluacion.
+- Los adicionales no estan integrados en `main`: viven en ramas separadas y no se repitio el analisis de SonarQube sobre ellas. El analisis VHS solo evalua la arquitectura; no la implementa.

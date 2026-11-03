@@ -134,7 +134,7 @@ Long Method y Large Class se redujeron parcialmente: save y OrderService aun coo
 
 Tras la ampliacion posterior de pruebas se cubren el CRUD y los errores de las tres rutas; la unica linea sin cubrir es main.py:38, el arranque de uvicorn. El analisis de SonarQube y el recorrido de la API se completaron; los resultados y evidencias se detallan a continuacion.
 
-No se implementaron los adicionales de idempotencia, cola y DLQ, ni el analisis VHS.
+Los adicionales de idempotencia, cola y DLQ y el analisis VHS no forman parte de esta rama: se entregan en ramas separadas del fork, descritas en [informe.md](informe.md).
 
 
 ## Resultados de SonarQube
