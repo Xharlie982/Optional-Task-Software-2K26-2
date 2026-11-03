@@ -1,9 +1,9 @@
 from typing import Literal
 
-from app.pricing import PricingCalculator
-
 from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from app.pricing import PricingCalculator
 
 
 class ItemInput(BaseModel):
@@ -31,7 +31,6 @@ class OrderInput(BaseModel):
 class OrderService:
     def __init__(self, database):
         self.database = database
-
 
     def save(self, data: OrderInput, order_id=None):
         with self.database.connect() as connection:
@@ -172,9 +171,7 @@ def quote_order(data: OrderInput, request: Request):
 
 @router.post("", status_code=201)
 def create_order(data: OrderInput, request: Request):
-    return OrderService(request.app.state.database).save(
-        data,
-    )
+    return OrderService(request.app.state.database).save(data)
 
 
 @router.get("")
@@ -189,9 +186,7 @@ def get_order(order_id: int, request: Request):
 
 @router.put("/{order_id}")
 def update_order(order_id: int, data: OrderInput, request: Request):
-    return OrderService(request.app.state.database).save(
-        data, order_id,
-    )
+    return OrderService(request.app.state.database).save(data, order_id)
 
 
 @router.delete("/{order_id}", status_code=204)
